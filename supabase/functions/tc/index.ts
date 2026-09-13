@@ -26,19 +26,12 @@ const CORS = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-// The spot derivation key. The environment variable is the right home for it;
-// the literal below is a stopgap, because Supabase's management API has no
-// endpoint for setting function secrets and this project was configured
-// entirely through it.
+// The spot derivation key. Spots are derived from it rather than stored, so
+// its value must never change: rotating it invalidates every code already
+// printed. There is deliberately no fallback — a missing key must stop the
+// function booting, not silently derive a different pattern.
 //
-// Consequences, in order of how likely they are to bite you:
-//   - if this file goes into a public repository, the key goes with it, and
-//     anyone can draw a code that verifies
-//   - rotating it means a redeploy, and it invalidates every code already
-//     printed, because spots are derived rather than stored
-//
-// To fix properly: `supabase secrets set THUMBCODE_SPOT_SECRET=...` with this
-// same value, then replace the literal with a throw.
+//   supabase secrets set THUMBCODE_SPOT_SECRET=... --project-ref <ref>
 const SECRET = Deno.env.get("THUMBCODE_SPOT_SECRET");
 if (!SECRET) {
   throw new Error("Missing THUMBCODE_SPOT_SECRET environment variable");
@@ -201,10 +194,6 @@ Deno.serve(async (req) => {
   if (route === "health") {
     return json({ ok: true, secret: Boolean(SECRET), time: new Date().toISOString() });
   }
-  if (!SECRET) {
-    return json({ error: "THUMBCODE_SPOT_SECRET is not set on this project" }, 500);
-  }
-
   try {
     if (req.method === "POST" && route === "issue") return await handleIssue(req);
     if (req.method === "POST" && route === "verify") return await handleVerify(req);

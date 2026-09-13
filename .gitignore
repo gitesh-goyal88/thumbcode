@@ -34,7 +34,6 @@ android/keystore.properties
 *.zip
 *.jpg
 thumbcode_documentation.md
-index.html
 
 # Claude Code
 .claude/launch.json

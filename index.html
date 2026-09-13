@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ThumbCode issuer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#F7F7F4; --card:#FFFFFF; --ink:#14161A; --muted:#5D6470;
+  --rule:#E3E4E0; --rule-strong:#C9CBC5;
+  --accent:#1B4B8F; --accent-tint:#E9EEF7;
+  --good:#1F6F4A; --good-tint:#E6F0EA;
+  --bad:#A32F26; --bad-tint:#F8E9E6;
+  --warn:#8A5B12; --warn-tint:#FAF0DE;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+code,.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+h1,h2,h3{font-weight:600;margin:0}
+h1{font-size:21px;letter-spacing:-0.01em}
+h2{font-size:17px}
+h3{font-size:14px}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.shell{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+.rail{background:var(--card);border-right:1px solid var(--rule);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 18px}
+.brand svg{width:26px;height:26px;flex:none}
+.brand b{font-weight:600;font-size:15px}
+.brand span{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{
+  all:unset;cursor:pointer;padding:9px 12px;border-radius:var(--r);font-size:14px;color:var(--muted);
+}
+.nav button:hover{background:var(--page);color:var(--ink)}
+.nav button[aria-current="true"]{background:var(--accent-tint);color:var(--accent);font-weight:500}
+.railfoot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px;background:var(--rule-strong);vertical-align:1px}
+.dot.on{background:var(--good)} .dot.off{background:var(--bad)}
+
+.main{padding:28px 34px 60px;max-width:1080px}
+.head{margin-bottom:22px}
+.head p{margin:5px 0 0;color:var(--muted);font-size:14px;max-width:62ch}
+.view{display:none} .view.on{display:block}
+
+.card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:22px 24px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:20px;align-items:start}
+@media (max-width:900px){.shell{grid-template-columns:1fr}.split{grid-template-columns:1fr}}
+
+.steps{display:flex;gap:0;margin-bottom:22px;border-bottom:1px solid var(--rule)}
+.step{display:flex;align-items:center;gap:9px;padding:0 18px 12px;color:var(--muted);font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.step:first-child{padding-left:0}
+.step em{
+  font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--page);
+  border:1px solid var(--rule-strong);display:grid;place-items:center;font-size:12px;
+}
+.step.on{color:var(--ink);border-bottom-color:var(--accent)}
+.step.on em{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.done em{background:var(--good-tint);border-color:var(--good);color:var(--good)}
+
+label{display:block;font-size:13px;color:var(--muted);margin:0 0 5px}
+.field{margin-bottom:15px}
+input,select,textarea{
+  width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--card);
+  border:1px solid var(--rule-strong);border-radius:var(--r);padding:9px 11px;
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hint{font-size:12px;color:var(--muted);margin:5px 0 0}
+
+.btn{
+  all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+  padding:10px 18px;border-radius:var(--r);font-size:14px;font-weight:500;
+  border:1px solid var(--rule-strong);background:var(--card);
+}
+.btn:hover{background:var(--page)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#163E77}
+.btn.danger{color:var(--bad);border-color:#E0BDB8}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+
+.paper{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:16px;text-align:center}
+.paper svg{width:100%;height:auto;max-width:210px}
+.paper .id{font-size:13px;margin-top:8px;color:var(--muted)}
+
+.summary{border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.summary div{display:flex;justify-content:space-between;gap:16px;padding:9px 13px;font-size:14px;border-bottom:1px solid var(--rule)}
+.summary div:last-child{border-bottom:0}
+.summary span:first-child{color:var(--muted)}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--muted);padding:0 12px 9px;border-bottom:1px solid var(--rule)}
+td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:500}
+.t-live{background:var(--good-tint);color:var(--good)}
+.t-rev{background:var(--bad-tint);color:var(--bad)}
+.t-mis{background:var(--warn-tint);color:var(--warn)}
+.t-unk{background:var(--page);color:var(--muted)}
+.empty{padding:34px 8px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+
+.banner{padding:11px 14px;border-radius:var(--r);font-size:13px;margin-bottom:16px}
+.b-warn{background:var(--warn-tint);color:var(--warn)}
+.b-bad{background:var(--bad-tint);color:var(--bad)}
+.b-good{background:var(--good-tint);color:var(--good)}
+
+.stage{position:fixed;inset:0;background:#fff;display:none;place-items:center;z-index:50}
+.stage.on{display:grid}
+.stage svg{height:75vh;width:auto}
+.stage .exit{position:absolute;top:18px;right:20px}
+
+@media print{
+  .rail,.steps,.actions,.nav,.railfoot,.no-print{display:none!important}
+  body,.main,.card{background:#fff;padding:0;border:0;margin:0}
+  .shell{display:block}
+  .paper svg{max-width:62mm}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="brand">
+      <svg viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="20" cy="21" rx="15" ry="17.5" fill="none" stroke="#1B4B8F" stroke-width="1.6"/><ellipse cx="20" cy="21" rx="10" ry="12" fill="none" stroke="#C9CBC5" stroke-width="1"/><ellipse cx="20" cy="21" rx="5" ry="6" fill="none" stroke="#C9CBC5" stroke-width="1"/><circle cx="20" cy="12" r="2.6" fill="#1B4B8F"/><circle cx="27" cy="26" r="2.6" fill="#1B4B8F"/><circle cx="14" cy="29" r="2.6" fill="#1B4B8F"/><rect x="0" y="0" width="4" height="4" fill="#14161A"/><rect x="36" y="0" width="4" height="4" fill="#14161A"/><rect x="0" y="44" width="4" height="4" fill="#14161A"/><rect x="37.5" y="45.5" width="2.5" height="2.5" fill="#14161A"/></svg>
+      <div><b>ThumbCode</b><span id="officeLabel">No office set</span></div>
+    </div>
+    <div class="nav">
+      <button data-view="issue" aria-current="true">Issue a document</button>
+      <button data-view="registry">Registry</button>
+      <button data-view="log">Scan log</button>
+      <button data-view="settings">Settings</button>
+    </div>
+    <div class="railfoot">
+      <div><span class="dot" id="connDot"></span><span id="connText">Not connected</span></div>
+      <div style="margin-top:6px;font-size:11px">Build 2026-09-08d</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <section class="view on" id="v-issue">
+      <div class="head"><h1>Issue a document</h1><p>Fill in the record, sign it with your finger, then print the code onto the paper.</p></div>
+      <div id="issueGate"></div>
+
+      <div class="steps">
+        <div class="step on" data-step="1"><em>1</em>Record details</div>
+        <div class="step" data-step="2"><em>2</em>Confirm and sign</div>
+        <div class="step" data-step="3"><em>3</em>Print</div>
+      </div>
+
+      <div class="card" id="pane1">
+        <div class="row">
+          <div class="field"><label for="fType">Document type</label>
+            <select id="fType">
+              <option>Land record extract</option>
+              <option>Encumbrance certificate</option>
+              <option>Sale deed copy</option>
+              <option>Mutation certificate</option>
+              <option>Income certificate</option>
+            </select></div>
+          <div class="field"><label for="fDate">Issue date</label><input type="date" id="fDate"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="fHolder">Holder name</label><input id="fHolder" placeholder="R. Sharma">
+            <p class="hint">Kept in the registry. Never returned to a phone that scans the code.</p></div>
+          <div class="field"><label for="fRef">Reference number</label><input id="fRef" placeholder="AGR/LR/2026/7214"></div>
+        </div>
+        <div class="field"><label for="fNote">Particulars printed on the document</label><input id="fNote" placeholder="Survey no. 114/2-B, Village Kheria"></div>
+        <div class="actions"><button class="btn primary" id="toStep2">Continue</button></div>
+      </div>
+
+      <div class="card" id="pane2" style="display:none">
+        <div class="split">
+          <div>
+            <h2>Confirm and sign</h2>
+            <p class="hint" style="margin:6px 0 14px">Your fingerprint signs this exact record. Change any field afterwards and the signature no longer matches.</p>
+            <div class="summary" id="confirmTable"></div>
+            <div id="fingerBlock" style="display:flex;gap:14px;align-items:center;margin:14px 0 0;padding:12px;border:1px solid var(--rule);border-radius:var(--r)">
+              <div id="fingerPreview" style="width:58px;height:78px;flex:none;border:1px solid var(--rule);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--muted);background:#fff">None</div>
+              <div style="flex:1">
+                <div style="font-size:14px">Holder's thumb impression</div>
+                <p class="hint" id="fingerHint">Optional. The print goes onto the code. Only a hash leaves this machine.</p>
+              </div>
+              <input type="file" id="fingerFile" accept="image/*" style="display:none">
+              <div id="fingerTune" style="display:none;flex:none;text-align:center">
+                <input type="range" id="fingerStrength" min="0" max="100" value="45" oninput="onTune()" style="width:96px">
+                <div class="hint" style="margin:0;font-size:11px">Ridge scale</div>
+              </div>
+              <button class="btn" id="doPickFile">Use an image</button>
+              <button class="btn" id="doCapture" style="display:none">Capture</button>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="doSign">Touch the reader to sign</button>
+              <button class="btn" id="backTo1">Back</button>
+            </div>
+            <p class="hint" id="signHint"></p>
+          </div>
+          <div class="paper" style="opacity:.45">
+            <div style="height:150px;display:grid;place-items:center;color:var(--muted);font-size:13px">Code appears<br>after signing</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="pane3" style="display:none">
+        <div class="split">
+          <div>
+            <h2>Ready to print</h2>
+            <p class="hint" style="margin:6px 0 14px">Print at 55&nbsp;mm wide or larger. Below that, toner spread merges the ring dots and the code stops decoding.</p>
+            <div class="summary" id="issuedTable"></div>
+            <div class="actions">
+              <button class="btn primary" id="doPrint">Print</button>
+              <button class="btn" id="doStage">Show full size on screen</button>
+              <button class="btn" id="doAgain">Issue another</button>
+            </div>
+          </div>
+          <div class="paper" id="issuedPaper"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-registry">
+      <div class="head"><h1>Registry</h1><p>Every code this office has issued.</p></div>
+      <div class="card" id="registryBody"><div class="empty">Loading</div></div>
+    </section>
+
+    <section class="view" id="v-log">
+      <div class="head"><h1>Scan log</h1><p>Every verification attempt, whatever the outcome. A forgery attempt is the most useful row here.</p></div>
+      <div id="anomaly"></div>
+      <div class="card" id="logBody"><div class="empty">Loading</div></div>
+    </section>
+
+    <section class="view" id="v-settings">
+      <div class="head"><h1>Settings</h1><p>Stored in this browser only.</p></div>
+      <div class="card" style="margin-bottom:16px">
+        <h2>Supabase project</h2>
+        <div class="field" style="margin-top:14px"><label for="sUrl">Project URL</label><input id="sUrl" placeholder="https://abcdefgh.supabase.co"></div>
+        <div class="field"><label for="sKey">Anon key</label><input id="sKey" placeholder="eyJhbGciOi...">
+          <p class="hint">The anon key is safe here. The spot derivation secret lives only in the edge function and never reaches this page.</p></div>
+        <div class="actions"><button class="btn primary" id="saveConn">Save and test</button><span id="connMsg" class="hint"></span></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <h2>This office</h2>
+        <div class="row" style="margin-top:14px">
+          <div class="field"><label for="sOffice">Office name</label><input id="sOffice" placeholder="Office of the Sub-Registrar, Agra"></div>
+          <div class="field"><label for="sCode">Office code</label><input id="sCode" placeholder="SR-AGR-04">
+            <p class="hint">Printed as microtext along the ridge lines.</p></div>
+        </div>
+        <div class="actions"><button class="btn primary" id="saveOffice">Save</button></div>
+      </div>
+      <div class="card">
+        <h2>Operator fingerprint</h2>
+        <p class="hint" style="margin:6px 0 14px">Enrol once per operator. No USB scanner and no driver install: use this computer's own reader or Windows Hello, or scan a QR code and let the fingerprint sensor on your phone do it.</p>
+        <div id="authState"></div>
+        <div class="actions">
+          <button class="btn primary" id="doEnrol">Use this computer</button>
+          <button class="btn" id="doEnrolPhone">Use my phone</button>
+          <button class="btn danger" id="doForget">Remove enrolment</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="stage" id="stage">
+  <button class="btn exit" id="stageExit">Close</button>
+  <div id="stageCode"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ---------- storage ---------- */
+// Defaults for the live project, so the portal works on first open. Anything
+// typed under Settings overrides these and persists in this browser. The anon
+// key is public by design: it grants nothing beyond what /verify already
+// returns to any phone pointed at a printed code.
+const DEFAULTS = {
+  url: 'https://mggopgforgmcexpkzsim.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZ29wZ2ZvcmdtY2V4cGt6c2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMjE4NTgsImV4cCI6MjEwNDc5Nzg1OH0.S-YaPNhCXOl2LGZ4-0_Lf2VOYl1V9n1V6D23YtgxyWo',
+  office: 'Office of the Sub-Registrar, Agra',
+  code: 'SR-AGR-04',
+};
+
+const mem = {};
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return mem[k] ?? null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch { mem[k]=v; } },
+  del(k){ try { localStorage.removeItem(k); } catch { delete mem[k]; } }
+};
+const cfg = {
+  url:    store.get('tc.url')    || DEFAULTS.url,
+  key:    store.get('tc.key')    || DEFAULTS.key,
+  office: store.get('tc.office') || DEFAULTS.office,
+  code:   store.get('tc.code')   || DEFAULTS.code
+};
+
+/* ---------- spec: must match supabase/functions/tc/spec.ts and ThumbCodeSpec.kt ---------- */
+const S = {
+  W:400, H:480, CX:200, CY:215, RX:155, RY:180,
+  RING:0.90, SLOTS:64, SYNC:[1,1,0,1,0,0,1,1],
+  RIDGES:[0.20,0.38,0.56,0.72],
+  RINGS:[{f:0.28,n:8,p:0},{f:0.52,n:12,p:0.5},{f:0.74,n:12,p:0}]
+};
+const ANCHORS = (() => {
+  const out=[];
+  for (const r of S.RINGS)
+    for (let i=0;i<r.n;i++){
+      const t = 2*Math.PI*(i+r.p)/r.n - Math.PI/2;
+      out.push({x:S.CX+S.RX*r.f*Math.cos(t), y:S.CY+S.RY*r.f*Math.sin(t)});
+    }
+  return out;
+})();
+function crc16(bytes){
+  let c=0xFFFF;
+  for (const b of bytes){ c^=b<<8; for(let i=0;i<8;i++){ c=(c&0x8000)?((c<<1)^0x1021):(c<<1); c&=0xFFFF; } }
+  return c;
+}
+function hexBytes(h){ const o=[]; for(let i=0;i<h.length;i+=2) o.push(parseInt(h.substr(i,2),16)); return o; }
+function ringBits(docId){
+  const id=hexBytes(docId), bits=[...S.SYNC];
+  for (const b of id) for (let i=7;i>=0;i--) bits.push((b>>i)&1);
+  const c=crc16(id);
+  for (let i=15;i>=0;i--) bits.push((c>>i)&1);
+  return bits;
+}
+/* ---------- ridge field ---------- */
+// Every document gets its own ridge pattern: loop, whorl or arch, with its own
+// core position, ridge spacing, wobble and ridge endings. All of it derives
+// from the document id through a plain hash, so any renderer reproduces it
+// exactly and no secret is involved. The ridges are decorative - the decoder
+// never samples them - which is why this can vary freely without touching the
+// protocol.
+function hash32(str){
+  let h = 2166136261 >>> 0;
+  for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+function rngFrom(seed){
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// The ridge field is seeded from the holder's fingerprint when one was
+// captured at issue, and from the document id alone when it was not. Captured
+// once, stored once, never matched again - the printed code is what gets
+// scanned afterwards, so the finger never has to be presented a second time.
+//
+// What is seeded in is the SHA-256 of the ISO template, not the image. The
+// ridges are therefore derived from the holder's print without being a
+// reproduction of it, which is what keeps a document that gets photocopied at
+// every counter from carrying a liftable biometric.
+function buildRidges(docId, fingerHash){
+  const seed = hash32('thumbcode-ridge:' + docId + '|' + (fingerHash || ''));
+  const rnd = rngFrom(seed);
+  const pattern = ['loop','whorl','arch'][seed % 3];
+  const n = 15 + Math.floor(rnd()*6);
+  const coreX = S.CX + (rnd()-0.5)*34;
+  const coreY = S.CY + (rnd()-0.5)*30 + (pattern === 'loop' ? 46 : 0);
+  const sp = pattern === 'arch' ? 330/n : (196 - 14)/n;
+  const phase = rnd()*Math.PI*2;
+  const paths = [];
+  for (let i=0;i<n;i++){
+    const amp = 2.0 + rnd()*2.6;
+    const freq = 2 + Math.floor(rnd()*3);
+    // Trimmed ridges read as ridge endings, which is what makes a real print
+    // look irregular rather than like contour lines on a map.
+    const t0 = rnd() < 0.30 ? 0.05 + rnd()*0.17 : 0;
+    const t1 = rnd() < 0.30 ? 0.05 + rnd()*0.17 : 0;
+    const steps = 96;
+    const pts = [];
+    for (let s=0;s<=steps;s++){
+      const u = t0 + (s/steps)*(1 - t0 - t1);
+      let x, y;
+      if (pattern === 'whorl'){
+        const a = -Math.PI + u*2*Math.PI;
+        const r = 14 + i*sp + 3.2*(a/Math.PI) + amp*Math.sin(freq*a + phase);
+        x = coreX + r*Math.cos(a);
+        y = coreY + r*Math.sin(a)*1.14;
+      } else if (pattern === 'loop'){
+        const a = -2.55 + u*5.1;
+        const r = 12 + i*sp + amp*Math.sin(freq*a + phase);
+        x = coreX + r*Math.sin(a);
+        y = coreY - r*Math.cos(a)*1.06;
+      } else {
+        const x0 = -190 + u*380;
+        const hump = (78 - i*2.4)*Math.exp(-Math.pow(x0/92, 2));
+        x = S.CX + x0;
+        y = (S.CY - 158) + i*sp - hump + amp*Math.sin(freq*x0/58 + phase);
+      }
+      pts.push(x.toFixed(1) + ' ' + y.toFixed(1));
+    }
+    paths.push(pts.join(' L '));
+  }
+  return { paths, pattern };
+}
+
+// Turn the captured frame into pure black and white. Print has no greys to
+// spare at 55 mm, and the decoder's wedge threshold assumes ink or paper, so a
+// soft greyscale scan would blur the ridges into a smudge on paper.
+// Otsu picks the cut point from the image's own histogram, which copes with the
+// wide exposure range different readers hand back.
+// Ridge enhancement pipeline, run on the issuing machine.
+//
+//   normalise -> segment -> orientation field -> Gabor -> threshold
+//
+// This is the classic Hong/Wan/Jain enhancement, not a neural pipeline. It is
+// enough here because ThumbCode never matches a fingerprint: the print is
+// captured once and put on the paper, and everything afterwards reads the
+// printed code. Nothing downstream depends on the ridges being recoverable to
+// biometric standard, so quality is advisory rather than a gate.
+async function enhancePrint(src, ridgePeriod){
+  // src is a complete data URL. Do not rebuild it here: a phone photo is JPEG
+  // or HEIC, and labelling those bytes as image/png is what stops the browser
+  // decoding them at all.
+  const img = new Image();
+  img.src = src;
+  await img.decode();
+
+  const W = 430, H = 500;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0,0,W,H);
+  g.drawImage(img, 0, 0, W, H);
+
+  const d = g.getImageData(0,0,W,H);
+  const N = W*H;
+  const lum = new Float32Array(N);
+  for (let i=0,q=0; i<d.data.length; i+=4,q++){
+    lum[q] = d.data[i]*0.299 + d.data[i+1]*0.587 + d.data[i+2]*0.114;
+  }
+
+  // 1. Local normalisation. Subtract the local mean and divide by the local
+  // standard deviation, so a light gradient across the thumb stops mattering
+  // and weak ridges are pulled up to the same contrast as strong ones. Integral
+  // images make both means O(1) per pixel.
+  const I1 = new Float64Array((W+1)*(H+1)), I2 = new Float64Array((W+1)*(H+1));
+  for (let y=0;y<H;y++){
+    let s1=0, s2=0;
+    for (let x=0;x<W;x++){
+      const v = lum[y*W+x];
+      s1 += v; s2 += v*v;
+      I1[(y+1)*(W+1)+(x+1)] = I1[y*(W+1)+(x+1)] + s1;
+      I2[(y+1)*(W+1)+(x+1)] = I2[y*(W+1)+(x+1)] + s2;
+    }
+  }
+  const win = Math.max(8, Math.round(ridgePeriod*2.5));
+  function box(I,x,y,r){
+    const x0=Math.max(0,x-r), y0=Math.max(0,y-r);
+    const x1=Math.min(W-1,x+r), y1=Math.min(H-1,y+r);
+    const n=(x1-x0+1)*(y1-y0+1);
+    return [ I[(y1+1)*(W+1)+(x1+1)] - I[y0*(W+1)+(x1+1)]
+           - I[(y1+1)*(W+1)+x0]     + I[y0*(W+1)+x0], n ];
+  }
+  const norm = new Float32Array(N);
+  const localVar = new Float32Array(N);
+  for (let y=0,q=0;y<H;y++) for (let x=0;x<W;x++,q++){
+    const [s1,n] = box(I1,x,y,win);
+    const [s2]   = box(I2,x,y,win);
+    const m = s1/n;
+    const v = Math.max(1, s2/n - m*m);
+    localVar[q] = v;
+    norm[q] = (lum[q]-m) / Math.sqrt(v);
+  }
+
+  // 2. Orientation field, per block, from averaged doubled-angle gradients.
+  const B = 12, BW = Math.ceil(W/B), BH = Math.ceil(H/B);
+  const theta = new Float32Array(BW*BH);
+  const coh = new Float32Array(BW*BH);
+  const solid = new Uint8Array(BW*BH);
+  for (let by=0;by<BH;by++) for (let bx=0;bx<BW;bx++){
+    let vx=0, vy=0, den=0, varSum=0, cnt=0;
+    for (let y=by*B+1; y<Math.min((by+1)*B, H-1); y++){
+      for (let x=bx*B+1; x<Math.min((bx+1)*B, W-1); x++){
+        const q = y*W+x;
+        const gx = norm[q+1] - norm[q-1];
+        const gy = norm[q+W] - norm[q-W];
+        vx += 2*gx*gy;
+        vy += gx*gx - gy*gy;
+        den += gx*gx + gy*gy;
+        varSum += localVar[q]; cnt++;
+      }
+    }
+    const b = by*BW+bx;
+    theta[b] = 0.5*Math.atan2(vx, vy) + Math.PI/2;
+    coh[b] = den > 0 ? Math.hypot(vx,vy)/den : 0;
+    // 3. Segmentation: flat blocks are table, wall or background, not skin.
+    solid[b] = (cnt && varSum/cnt > 90 && coh[b] > 0.25) ? 1 : 0;
+  }
+
+  // Quality: how consistently the gradients agree on a direction inside the
+  // segmented region. Real ridges are highly coherent; noise is not.
+  let cohSum=0, cohN=0;
+  for (let b=0;b<solid.length;b++) if (solid[b]){ cohSum += coh[b]; cohN++; }
+  const coverage = cohN/solid.length;
+  const quality = Math.round(100 * (cohN ? cohSum/cohN : 0) * Math.min(1, coverage*3));
+
+  // 4. Gabor filter, tuned to each block's own ridge direction. This is the
+  // step that recovers a ridge a plain threshold would lose.
+  const per = ridgePeriod;
+  const sx = per*0.55, sy = per*0.75;
+  const K = Math.max(4, Math.min(12, Math.round(per*1.1)));
+  const out = new Float32Array(N);
+  const cosT = new Float32Array(BW*BH), sinT = new Float32Array(BW*BH);
+  for (let b=0;b<theta.length;b++){ cosT[b]=Math.cos(theta[b]); sinT[b]=Math.sin(theta[b]); }
+
+  for (let y=0,q=0;y<H;y++) for (let x=0;x<W;x++,q++){
+    const b = Math.floor(y/B)*BW + Math.floor(x/B);
+    if (!solid[b]){ out[q] = 1e9; continue; }
+    const ct = cosT[b], st = sinT[b];
+    let acc = 0;
+    for (let j=-K;j<=K;j++){
+      const yy = y+j; if (yy<0||yy>=H) continue;
+      for (let i=-K;i<=K;i++){
+        const xx = x+i; if (xx<0||xx>=W) continue;
+        const ax = -i*st + j*ct;   // across the ridges
+        const ay =  i*ct + j*st;   // along the ridges
+        const w = Math.exp(-(ax*ax/(2*sx*sx) + ay*ay/(2*sy*sy))) * Math.cos(2*Math.PI*ax/per);
+        acc += w * norm[yy*W+xx];
+      }
+    }
+    out[q] = acc;
+  }
+
+  // 5. Sign of the Gabor response is the ridge. Self-normalising, so there is
+  // no threshold left to guess at.
+  for (let q=0;q<N;q++){
+    const on = out[q] < 0;
+    const i = q*4;
+    d.data[i] = d.data[i+1] = d.data[i+2] = (out[q] > 1e8) ? 255 : (on ? 0 : 255);
+    d.data[i+3] = 255;
+  }
+  g.putImageData(d,0,0);
+  return { url: c.toDataURL('image/png'), quality };
+}
+
+// fingerImage is a data URL from binarize(), or null when nothing was captured.
+function buildSvg(docId, officeCode, spots, fingerHash, fingerImage){
+  const p=[];
+  p.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S.W} ${S.H}" role="img" aria-label="ThumbCode ${docId}">`);
+  p.push(`<rect width="${S.W}" height="${S.H}" fill="#FFFFFF"/>`);
+
+  const unit = `${officeCode} \u00B7 ${docId.toUpperCase()} \u00B7 `;
+
+  if (fingerImage){
+    // The holder's own ridges. Clipped to 0.82 of the oval so the print never
+    // reaches the data ring at 0.90 - real ridges are far denser than drawn
+    // ones and would otherwise sit under the ring slots.
+    const irx = S.RX*0.82, iry = S.RY*0.82;
+    p.push(`<defs><clipPath id="tcFinger"><ellipse cx="${S.CX}" cy="${S.CY}" rx="${irx.toFixed(1)}" ry="${iry.toFixed(1)}"/></clipPath></defs>`);
+    p.push(`<image href="${fingerImage}" x="${(S.CX-irx).toFixed(1)}" y="${(S.CY-iry).toFixed(1)}" `+
+           `width="${(irx*2).toFixed(1)}" height="${(iry*2).toFixed(1)}" `+
+           `preserveAspectRatio="xMidYMid slice" clip-path="url(#tcFinger)"/>`);
+    // Microtext moves into the clear band between the print and the ring.
+    const mrx = S.RX*0.86, mry = S.RY*0.86;
+    p.push(`<path id="rgm" fill="none" stroke="#000000" stroke-width="0" `+
+           `d="M ${S.CX-mrx} ${S.CY} a ${mrx} ${mry} 0 1 1 ${2*mrx} 0 a ${mrx} ${mry} 0 1 1 ${-2*mrx} 0"/>`);
+    p.push(`<text font-family="monospace" font-size="2.6" letter-spacing="0.28" fill="#000000">`+
+           `<textPath href="#rgm">${unit.repeat(30)}</textPath></text>`);
+    // Punch every anchor clear before the spots go down. Without this the
+    // decoder samples ridge ink and reads spots that were never set - the one
+    // way a real print can break decoding.
+    for (const a of ANCHORS){
+      p.push(`<circle cx="${a.x.toFixed(2)}" cy="${a.y.toFixed(2)}" r="9" fill="#FFFFFF"/>`);
+    }
+  } else {
+    const ridges = buildRidges(docId, fingerHash);
+    p.push(`<defs><clipPath id="tcOval"><ellipse cx="${S.CX}" cy="${S.CY}" rx="152" ry="177"/></clipPath></defs>`);
+    p.push(`<g clip-path="url(#tcOval)">`);
+    const microOn = [Math.floor(ridges.paths.length*0.28), Math.floor(ridges.paths.length*0.55), Math.floor(ridges.paths.length*0.8)];
+    ridges.paths.forEach((d,i)=>{
+      p.push(`<path id="rg${i}" d="M ${d}" fill="none" stroke="#000000" stroke-width="0.9" stroke-linecap="round"/>`);
+    });
+    microOn.forEach(i=>{
+      if (!ridges.paths[i]) return;
+      p.push(`<text dy="-1.7" font-family="monospace" font-size="2.6" letter-spacing="0.28" fill="#000000">`+
+             `<textPath href="#rg${i}">${unit.repeat(24)}</textPath></text>`);
+    });
+    p.push(`</g>`);
+  }
+  p.push(`<ellipse cx="${S.CX}" cy="${S.CY}" rx="${S.RX}" ry="${S.RY}" fill="none" stroke="#000000" stroke-width="2"/>`);
+
+  const bits = ringBits(docId), rrx=S.RX*S.RING, rry=S.RY*S.RING;
+  for (let j=0;j<S.SLOTS;j++){
+    const t = 2*Math.PI*j/S.SLOTS - Math.PI/2;
+    const x = S.CX + rrx*Math.cos(t), y = S.CY + rry*Math.sin(t);
+    p.push(`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${bits[j]?4.2:1.3}" fill="#000000"/>`);
+  }
+
+  for (const i of spots){
+    const a=ANCHORS[i];
+    p.push(`<circle cx="${a.x.toFixed(2)}" cy="${a.y.toFixed(2)}" r="11" fill="#000000"/>`);
+  }
+
+  p.push(`<polygon points="200,397 212,413 188,413" fill="#000000"/>`);
+  ['#000000','#666666','#B3B3B3','#FFFFFF'].forEach((c,i)=>
+    p.push(`<rect x="${144+28*i}" y="424" width="28" height="16" fill="${c}"/>`));
+  p.push(`<rect x="144" y="424" width="112" height="16" fill="none" stroke="#000000" stroke-width="0.6"/>`);
+
+  [[21,21,26],[379,21,26],[21,459,26],[379,459,14]].forEach(([cx,cy,s])=>
+    p.push(`<rect x="${cx-s/2}" y="${cy-s/2}" width="${s}" height="${s}" fill="#000000"/>`));
+
+  p.push('</svg>');
+  return p.join('');
+}
+
+/* ---------- api ---------- */
+const fn  = () => `${cfg.url.replace(/\/$/,'')}/functions/v1/tc`;
+const rest= () => `${cfg.url.replace(/\/$/,'')}/rest/v1`;
+const hdr = () => ({ 'apikey':cfg.key, 'Authorization':`Bearer ${cfg.key}`, 'Content-Type':'application/json' });
+
+async function post(route, body){
+  const r = await fetch(`${fn()}/${route}`, {method:'POST', headers:hdr(), body:JSON.stringify(body)});
+  const j = await r.json().catch(()=>({error:'Unreadable response'}));
+  if (!r.ok) throw new Error(j.error || `Request failed (${r.status})`);
+  return j;
+}
+async function read(path){
+  const r = await fetch(`${rest()}/${path}`, {headers:hdr()});
+  if (!r.ok) throw new Error(`Read failed (${r.status})`);
+  return r.json();
+}
+
+/* ---------- webauthn ---------- */
+function b64url(buf){
+  return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function unb64url(s){
+  const t = s.replace(/-/g,'+').replace(/_/g,'/');
+  return Uint8Array.from(atob(t + '='.repeat((4 - t.length%4)%4)), c=>c.charCodeAt(0));
+}
+function canonical(v){
+  if (v===null || typeof v!=='object') return JSON.stringify(v);
+  if (Array.isArray(v)) return '['+v.map(canonical).join(',')+']';
+  return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
+}
+async function sha256(text){
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
+}
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+const authAvailable = () => !!(window.PublicKeyCredential && window.isSecureContext);
+const credId = () => store.get('tc.cred');
+
+// mode 'local' uses whatever this machine has - a built-in fingerprint reader,
+// or Windows Hello face or PIN. mode 'phone' shows a QR code and hands the
+// verification to the operator's own handset, whose fingerprint sensor does the
+// work. No USB reader is involved in either path.
+async function enrol(mode){
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const uid = crypto.getRandomValues(new Uint8Array(16));
+  const opts = {
+    challenge, rp:{name:'ThumbCode issuer'},
+    user:{id:uid, name:'operator', displayName:'Issuing operator'},
+    pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    authenticatorSelection:{userVerification:'required'},
+    attestation:'none', timeout:120000
+  };
+  if (mode === 'phone'){
+    opts.hints = ['hybrid'];
+    opts.authenticatorSelection.authenticatorAttachment = 'cross-platform';
+    opts.authenticatorSelection.residentKey = 'required';
+  }
+  const cred = await navigator.credentials.create({publicKey:opts});
+  store.set('tc.cred', b64url(cred.rawId));
+  store.set('tc.credMode', mode);
+}
+async function signPayload(payload){
+  const challenge = await sha256(canonical(payload));
+  const opts = {
+    challenge,
+    allowCredentials:[{type:'public-key', id:unb64url(credId()),
+      transports: store.get('tc.credMode')==='phone' ? ['hybrid'] : ['internal']}],
+    userVerification:'required', timeout:120000
+  };
+  if (store.get('tc.credMode')==='phone') opts.hints = ['hybrid'];
+  const assertion = await navigator.credentials.get({publicKey:opts});
+  return JSON.stringify({
+    signature:        b64url(assertion.response.signature),
+    authenticatorData:b64url(assertion.response.authenticatorData),
+    clientDataJSON:   b64url(assertion.response.clientDataJSON)
+  });
+}
+
+/* ---------- ui plumbing ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let draft=null, issued=null, view='issue';
+
+function show(name){
+  view=name;
+  $$('.view').forEach(v=>v.classList.toggle('on', v.id===`v-${name}`));
+  $$('.nav button').forEach(b=>b.setAttribute('aria-current', String(b.dataset.view===name)));
+  if (name==='registry') loadRegistry();
+  if (name==='log') loadLog();
+}
+$$('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.view));
+
+function setStep(n){
+  $$('.step').forEach(s=>{
+    const i=+s.dataset.step;
+    s.classList.toggle('on', i===n);
+    s.classList.toggle('done', i<n);
+  });
+  $('#pane1').style.display = n===1?'':'none';
+  $('#pane2').style.display = n===2?'':'none';
+  $('#pane3').style.display = n===3?'':'none';
+}
+
+function gate(){
+  const box=$('#issueGate'); box.innerHTML='';
+  if (!cfg.url || !cfg.key)
+    box.innerHTML = '<div class="banner b-bad">No Supabase project set. Add the project URL and anon key under Settings before issuing.</div>';
+  else if (!cfg.code)
+    box.innerHTML = '<div class="banner b-warn">No office code set. The microtext along the ridges will be blank until you add one under Settings.</div>';
+  else if (!authAvailable())
+    box.innerHTML = '<div class="banner b-warn">This page is not on a secure origin, so the browser will not offer WebAuthn. Open it over https or from localhost to sign with a fingerprint.</div>';
+  else if (!credId())
+    box.innerHTML = '<div class="banner b-warn">No fingerprint enrolled yet, so documents will be recorded as unsigned. ' +
+      '<a href="#" id="gotoEnrol" style="color:inherit">Enrol now</a> using this computer\'s sensor or your phone \u2014 it takes a few seconds.</div>';
+}
+function wireGateLink(){
+  const a = $('#gotoEnrol');
+  if (a) a.onclick = (e) => { e.preventDefault(); show('settings'); };
+}
+function connect(){
+  $('#officeLabel').textContent = cfg.office || 'No office set';
+  $('#sUrl').value=cfg.url; $('#sKey').value=cfg.key;
+  $('#sOffice').value=cfg.office; $('#sCode').value=cfg.code;
+  gate(); wireGateLink(); authState(); ping();
+}
+async function ping(){
+  const dot=$('#connDot'), txt=$('#connText');
+  if (!cfg.url){ dot.className='dot'; txt.textContent='Not connected'; return; }
+  try{
+    const r = await fetch(`${fn()}/health`, {headers:hdr()});
+    const j = await r.json();
+    dot.className='dot ' + (j.ok && j.secret ? 'on':'off');
+    txt.textContent = j.ok ? (j.secret ? 'Connected' : 'Secret missing') : 'Function error';
+  } catch { dot.className='dot off'; txt.textContent='Unreachable'; }
+}
+function authState(){
+  const el=$('#authState');
+  if (!authAvailable()) el.innerHTML='<div class="banner b-warn">This page is not on a secure origin, so the browser will not offer WebAuthn. Serve it over https or from localhost.</div>';
+  else if (credId()) el.innerHTML='<div class="banner b-good">Enrolled: ' +
+    (store.get('tc.credMode')==='phone'
+      ? "the operator's phone, reached by QR code at signing time."
+      : 'this computer, using Windows Hello or its built-in reader.') + '</div>';
+  else el.innerHTML='<div class="banner b-warn">No reader enrolled. Issuing will fall back to demo mode.</div>';
+}
+
+/* ---------- issue flow ---------- */
+$('#fDate').value = new Date().toISOString().slice(0,10);
+
+$('#toStep2').onclick = () => {
+  const p = {
+    docType:  $('#fType').value,
+    holderName: $('#fHolder').value.trim(),
+    referenceNo:$('#fRef').value.trim(),
+    particulars:$('#fNote').value.trim(),
+    issueDate:$('#fDate').value,
+    officeCode: cfg.code,
+    officeName: cfg.office
+  };
+  if (!p.holderName || !p.referenceNo){ alert('Holder name and reference number are both needed.'); return; }
+  if (!cfg.url || !cfg.key){ alert('Set the Supabase project under Settings first.'); return; }
+  draft = p;
+  resetCapture();
+  probeBridge();
+  $('#confirmTable').innerHTML = [
+    ['Type',p.docType],['Holder',p.holderName],['Reference',p.referenceNo],
+    ['Particulars',p.particulars||'—'],['Issue date',p.issueDate],['Office',p.officeName||'—']
+  ].map(([k,v])=>`<div><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('');
+  $('#signHint').textContent = (authAvailable() && credId())
+    ? 'The challenge is the SHA-256 of this record.'
+    : 'No reader enrolled — this will be recorded as unsigned.';
+  setStep(2);
+};
+$('#backTo1').onclick = () => setStep(1);
+
+/* ---------- holder fingerprint capture ---------- */
+// The native bridge runs on this machine only. If it is not running the flow
+// carries on without a fingerprint rather than blocking the clerk.
+const BRIDGE = 'http://127.0.0.1:8137';
+
+function resetCapture(){
+  $('#fingerPreview').textContent = 'None';
+  $('#fingerHint').textContent = "Optional. The image is shown here and then discarded — only a hash of the template is stored.";
+  if (draft){ delete draft.holderFingerHash; delete draft.fingerQuality; delete draft.holderFingerImage; }
+  lastFingerSrc = null;
+  const tune = $('#fingerTune'); if (tune) tune.style.display = 'none';
+}
+
+// Holder capture is off unless a bridge is actually listening. Without a USB
+// reader the block never appears, so nothing in the flow mentions a device the
+// office does not have.
+async function probeBridge(){
+  $('#doCapture').style.display = 'none';
+  try{
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), 700);
+    const r = await fetch(`${BRIDGE}/status`, {signal: ctl.signal});
+    clearTimeout(timer);
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.ok) return;
+    $('#doCapture').style.display = '';
+    $('#fingerHint').textContent = `${j.reader} attached. Capture, or use an image file.`;
+  } catch { /* no bridge: the image-file path still works */ }
+}
+
+// Both paths land here. b64 is a bare base64 image payload.
+let lastFingerSrc = null, lastFingerLabel = '';
+async function useFingerImage(src, label){
+  lastFingerSrc = src; lastFingerLabel = label;
+  $('#fingerTune').style.display = '';
+  $('#fingerHint').textContent = 'Enhancing';
+  const period = 6 + Number($('#fingerStrength').value) * 0.14;
+  const res = await enhancePrint(src, period);
+  draft.holderFingerImage = res.url;
+  draft.holderFingerHash  = await sha256Hex(res.url);
+  draft.fingerQuality = res.quality;
+  $('#fingerPreview').innerHTML =
+    `<img alt="Thumb impression" src="${res.url}" style="width:100%;height:100%;object-fit:cover;border-radius:5px">`;
+  // Advisory, never a block. The document id and the spots do not depend on
+  // the print, so refusing to issue a land record over a poor photo would be
+  // the wrong behaviour.
+  const verdict = res.quality >= 55 ? 'ridges read well'
+                : res.quality >= 30 ? 'usable, but weak in places'
+                : 'poor \u2014 more side light, closer focus, or use an inked impression';
+  $('#fingerHint').textContent = `${label}. Quality ${res.quality}, ${verdict}. Slide to match the ridge spacing.`;
+}
+
+// Photo quality varies enormously between an inked impression and a bare
+// thumb under room light, so the cut point is worth having a hand on.
+let tuneTimer = null;
+window.onTune = function(){
+  if (!lastFingerSrc) return;
+  clearTimeout(tuneTimer);
+  tuneTimer = setTimeout(() => useFingerImage(lastFingerSrc, lastFingerLabel), 120);
+};
+
+$('#doPickFile').onclick = () => $('#fingerFile').click();
+$('#fingerFile').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  $('#fingerHint').textContent = 'Reading';
+  try{
+    // Keep the browser's own mime type. HEIC is the one format Chrome cannot
+    // decode at all, so it is worth naming rather than reporting as a bad photo.
+    const src = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = () => rej(new Error('the file could not be opened'));
+      r.readAsDataURL(f);
+    });
+    await useFingerImage(src, 'Image file');
+  } catch (err) {
+    const heic = /heic|heif/i.test(f.type + ' ' + f.name);
+    $('#fingerHint').textContent = heic
+      ? 'HEIC images do not decode in this browser. Export the photo as JPEG and try again.'
+      : `Could not use that image: ${err.message || err}`;
+  }
+  e.target.value = '';
+};
+
+$('#doCapture').onclick = async () => {
+  const b = $('#doCapture');
+  b.disabled = true; b.textContent = 'Waiting for finger';
+  try{
+    const r = await fetch(`${BRIDGE}/capture`);
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    await useFingerImage('data:image/png;base64,' + j.imagePng, j.mock ? 'Mock reader' : 'Reader');
+    draft.holderFingerHash = j.templateHash;
+  } catch {
+    $('#fingerHint').textContent = 'The reader stopped responding. The image-file path still works.';
+  } finally {
+    b.disabled = false; b.textContent = 'Capture';
+  }
+};
+
+$('#doSign').onclick = async () => {
+  const btn=$('#doSign'); btn.disabled=true;
+  const usingAuth = authAvailable() && credId();
+  btn.textContent = usingAuth ? 'Waiting for your finger' : 'Issuing';
+  try{
+    // The image stays on this machine; only the hash is sent. Build the wire
+    // payload first, then sign that exact object - signing `draft` would cover
+    // the image and no longer match what the server hashes.
+    const { holderFingerImage, ...wire } = draft;
+    let signature=null, signMode='demo', cid=null;
+    if (usingAuth){
+      signature = await signPayload(wire);
+      signMode='webauthn'; cid=credId();
+    }
+    issued = await post('issue', {payload:wire, signature, signMode, credentialId:cid});
+    issued.ridgeSeed = draft.holderFingerHash || '';
+    issued.ridgeImage = draft.holderFingerImage || null;
+    $('#issuedPaper').innerHTML =
+      buildSvg(issued.docId, cfg.code || '', issued.spots, draft.holderFingerHash, draft.holderFingerImage) +
+      `<div class="id mono">${esc(issued.docId)}</div>`;
+    $('#issuedTable').innerHTML = [
+      ['Document id', issued.docId],
+      ['Spots', `${issued.spots.length} of 32 (${issued.spots.join(', ')})`],
+      ['Signature', signMode==='webauthn' ? 'Signed by enrolled reader' : 'Unsigned, demo mode'],
+      ['Holder fingerprint', draft.holderFingerImage
+        ? 'Captured. The print itself is on the code; hash stored.'
+        : 'Not captured. Ridge pattern generated from the document id.'],
+      ['Holder', draft.holderName]
+    ].map(([k,v])=>`<div><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('');
+    setStep(3);
+  } catch(e){
+    alert(e.name==='NotAllowedError' ? 'The reader did not confirm. Try again.' : e.message);
+  } finally {
+    btn.disabled=false; btn.textContent='Touch the reader to sign';
+  }
+};
+$('#doPrint').onclick = () => window.print();
+$('#doAgain').onclick = () => { $('#fHolder').value=''; $('#fRef').value=''; $('#fNote').value=''; resetCapture(); setStep(1); };
+$('#doStage').onclick = () => {
+  $('#stageCode').innerHTML = buildSvg(issued.docId, cfg.code||'', issued.spots, issued.ridgeSeed, issued.ridgeImage);
+  $('#stage').classList.add('on');
+};
+$('#stageExit').onclick = () => $('#stage').classList.remove('on');
+document.addEventListener('keydown', e => { if (e.key==='Escape') $('#stage').classList.remove('on'); });
+
+/* ---------- registry ---------- */
+async function loadRegistry(){
+  const box=$('#registryBody');
+  try{
+    const rows = await read('documents?select=*&order=issued_at.desc&limit=200');
+    if (!rows.length){ box.innerHTML='<div class="empty"><b>No documents yet</b>Issue one and it appears here.</div>'; return; }
+    box.innerHTML = `<table><thead><tr><th>Document id</th><th>Type</th><th>Reference</th><th>Issued</th><th>Status</th><th></th></tr></thead><tbody>`
+      + rows.map(d=>`<tr>
+          <td class="mono">${esc(d.doc_id)}</td>
+          <td>${esc(d.doc_type)}</td>
+          <td class="mono">${esc(d.reference_masked)}</td>
+          <td>${esc(d.issue_date)}</td>
+          <td>${d.revoked?'<span class="tag t-rev">Revoked</span>':'<span class="tag t-live">Valid</span>'}</td>
+          <td style="text-align:right">${d.revoked?'':`<button class="btn danger" data-revoke="${esc(d.doc_id)}" style="padding:5px 12px">Revoke</button>`}</td>
+        </tr>`).join('') + '</tbody></table>';
+    box.querySelectorAll('[data-revoke]').forEach(b=>b.onclick=async()=>{
+      const reason = prompt('Why is this document being revoked?');
+      if (reason===null) return;
+      try{ await post('revoke',{docId:b.dataset.revoke, reason}); loadRegistry(); }
+      catch(e){ alert(e.message); }
+    });
+  } catch(e){ box.innerHTML=`<div class="empty"><b>Could not load the registry</b>${esc(e.message)}</div>`; }
+}
+
+/* ---------- scan log ---------- */
+const TAG = {verified:['t-live','Verified'], revoked:['t-rev','Revoked'],
+             pattern_mismatch:['t-mis','Pattern mismatch'], unknown:['t-unk','Unknown code']};
+let logTimer=null, channel=null;
+
+async function loadLog(){
+  const box=$('#logBody');
+  try{
+    const rows = await read('scans?select=*&order=scanned_at.desc&limit=100');
+    renderLog(rows);
+    const flags = await read('scan_anomalies?select=*');
+    $('#anomaly').innerHTML = flags.length
+      ? `<div class="banner b-bad">${flags.length} document${flags.length>1?'s':''} verified in more than one place today: ${flags.map(f=>esc(f.doc_id)).join(', ')}. Two copies of one certificate is what this log is for.</div>`
+      : '';
+    subscribe();
+  } catch(e){ box.innerHTML=`<div class="empty"><b>Could not load the log</b>${esc(e.message)}</div>`; }
+}
+function renderLog(rows){
+  const box=$('#logBody');
+  if (!rows.length){ box.innerHTML='<div class="empty"><b>No scans yet</b>Point the app at a printed code and the result lands here.</div>'; return; }
+  box.innerHTML = `<table><thead><tr><th>Time</th><th>Document id</th><th>Result</th><th>Spots read</th><th>Place</th></tr></thead><tbody>`
+    + rows.map(s=>{
+        const [cls,label]=TAG[s.result]||['t-unk',s.result];
+        return `<tr>
+          <td>${new Date(s.scanned_at).toLocaleTimeString()}</td>
+          <td class="mono">${esc(s.doc_id)}</td>
+          <td><span class="tag ${cls}">${label}</span></td>
+          <td class="mono">${(s.spots||[]).join(', ')||'—'}</td>
+          <td>${esc(s.place||'—')}</td></tr>`;
+      }).join('') + '</tbody></table>';
+}
+function subscribe(){
+  if (channel || !window.supabase || !cfg.url || !cfg.key) { poll(); return; }
+  try{
+    const client = window.supabase.createClient(cfg.url, cfg.key);
+    channel = client.channel('scans')
+      .on('postgres_changes', {event:'INSERT', schema:'public', table:'scans'},
+          () => { if (view==='log') read('scans?select=*&order=scanned_at.desc&limit=100').then(renderLog); })
+      .subscribe();
+  } catch { poll(); }
+}
+function poll(){
+  clearInterval(logTimer);
+  logTimer = setInterval(()=>{
+    if (view==='log') read('scans?select=*&order=scanned_at.desc&limit=100').then(renderLog).catch(()=>{});
+  }, 4000);
+}
+
+/* ---------- settings ---------- */
+$('#saveConn').onclick = async () => {
+  cfg.url = $('#sUrl').value.trim(); cfg.key = $('#sKey').value.trim();
+  store.set('tc.url',cfg.url); store.set('tc.key',cfg.key);
+  $('#connMsg').textContent='Testing';
+  await ping(); gate();
+  $('#connMsg').textContent = $('#connText').textContent;
+};
+$('#saveOffice').onclick = () => {
+  cfg.office=$('#sOffice').value.trim(); cfg.code=$('#sCode').value.trim();
+  store.set('tc.office',cfg.office); store.set('tc.code',cfg.code);
+  connect();
+};
+async function runEnrol(mode){
+  if (!authAvailable()){ alert('Serve this page over https or from localhost, then try again.'); return; }
+  try{ await enrol(mode); authState(); gate(); wireGateLink(); }
+  catch(e){ alert('Enrolment did not complete: ' + e.message); }
+}
+$('#doEnrol').onclick      = () => runEnrol('local');
+$('#doEnrolPhone').onclick = () => runEnrol('phone');
+$('#doForget').onclick = () => { store.del('tc.cred'); store.del('tc.credMode'); authState(); gate(); };
+
+connect(); setStep(1);
+</script>
+</body>
+</html>

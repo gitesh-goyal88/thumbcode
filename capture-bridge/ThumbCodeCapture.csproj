@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AssemblyName>ThumbCodeCapture</AssemblyName>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <!--
+    x86 is deliberate. Most Indian fingerprint SDKs ship 32-bit native DLLs and
+    will throw BadImageFormatException from an x64 host.
+
+    Vendor SDK reference goes here once you know which reader you have, e.g.
+    <ItemGroup><Reference Include="MFS100"><HintPath>lib\MFS100.dll</HintPath></Reference></ItemGroup>
+  -->
+</Project>

@@ -1,0 +1,40 @@
+# Ignore env files with secrets
+.env
+.env.*
+!.env.example
+
+# Supabase
+supabase/.temp/
+supabase/functions/*/node_modules/
+
+# Portal
+portal/node_modules/
+
+# Capture Bridge (C#)
+capture-bridge/bin/
+capture-bridge/obj/
+
+# Android
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/*.iml
+android/.cxx/
+android/captures/
+android/*.keystore
+android/*.jks
+android/keystore.properties
+
+# OS
+.DS_Store
+
+# Stray files
+*.zip
+*.jpg
+thumbcode_documentation.md
+index.html
+
+# Claude Code
+.claude/launch.json

@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.ThumbCode" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#141513</item>
+        <item name="android:navigationBarColor">#141513</item>
+    </style>
+</resources>

@@ -27,20 +27,6 @@ key is the one that must not leak; see below.
 Serve `portal/index.html` over `localhost` or https - WebAuthn is refused on
 `file://`, and the portal will say so and fall back to demo mode.
 
-### The derivation key is currently in the function source
-
-Supabase's management API has no endpoint for setting function secrets, so
-`SECRET` in `functions/tc/index.ts` falls back to a literal. It still reads
-`THUMBCODE_SPOT_SECRET` first, so the fix is one command and a redeploy:
-
-```bash
-supabase link --project-ref iofwmndnclsfhifqspcs
-supabase secrets set THUMBCODE_SPOT_SECRET=34d6e30c56f7717c284a7a4f87720ab58cdfcaaff96608213f507b087a9bbcb5
-```
-
-Then replace the literal with a `throw`. Do this before the repository goes
-public - the key in that file is enough to draw a code that verifies. Do not
-change the value: every code already issued derives from it.
 
 ### Verified against the live project
 
